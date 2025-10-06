@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groups - SyncBeats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.12/typed.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+            overflow-x: hidden;
+        }
+        
+        .aurora-bg {
+            background: linear-gradient(45deg, #8b5cf6, #f59e0b, #8b5cf6);
+            background-size: 400% 400%;
+            animation: aurora 8s ease-in-out infinite;
+            opacity: 0.1;
+        }
+        
+        @keyframes aurora {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .group-card {
+            background: rgba(31, 41, 55, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .group-card:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .genre-filter {
+            transition: all 0.3s ease;
+        }
+        
+        .genre-filter.active {
+            background: linear-gradient(135deg, #8b5cf6, #a855f7);
+            color: white;
+        }
+        
+        .nav-bottom {
+            backdrop-filter: blur(10px);
+            background: rgba(26, 26, 26, 0.9);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6, #a855f7);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+        }
+        
+        .member-count {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .floating-notes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .note {
+            position: absolute;
+            color: rgba(139, 92, 246, 0.3);
+            animation: float 6s ease-in-out infinite;
+            font-size: 20px;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-white">
+    <!-- Aurora Background -->
+    <div class="aurora-bg fixed inset-0 z-0"></div>
+    
+    <!-- Floating Notes -->
+    <div class="floating-notes z-10">
+        <div class="note" style="left: 15%; animation-delay: 0s;">♪</div>
+        <div class="note" style="left: 35%; animation-delay: 1s;">♫</div>
+        <div class="note" style="left: 55%; animation-delay: 2s;">♪</div>
+        <div class="note" style="left: 75%; animation-delay: 3s;">♫</div>
+        <div class="note" style="left: 85%; animation-delay: 4s;">♪</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="relative z-20 min-h-screen pb-20">
+        <!-- Header -->
+        <header class="p-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-gradient-to-r from-violet-500 to-amber-500 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">♪</span>
+                </div>
+                <span class="text-xl font-bold">SyncBeats</span>
+            </div>
+            <button class="btn-primary px-4 py-2 rounded-lg text-sm font-medium">
+                + Create Group
+            </button>
+        </header>
+
+        <!-- Hero Section -->
+        <div class="px-4 py-6 text-center">
+            <h1 class="text-3xl font-bold mb-2">
+                <span id="typed-title"></span>
+            </h1>
+            <p class="text-gray-400">Join groups and listen together</p>
+        </div>
+
+        <!-- Join Group Section -->
+        <div class="px-4 py-6">
+            <div class="bg-gray-800/50 rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-4">Join a Group</h3>
+                <div class="flex space-x-3">
+                    <input type="text" placeholder="Enter group code..." 
+                           class="flex-1 bg-gray-700 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+                    <button class="btn-primary px-6 py-3 rounded-lg text-sm font-medium">Join</button>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">Get a code from your friends to join their listening session</p>
+            </div>
+        </div>
+
+        <!-- Genre Filters -->
+        <div class="px-4 py-4">
+            <h3 class="text-lg font-semibold mb-4">Browse by Genre</h3>
+            <div class="flex space-x-2 overflow-x-auto pb-2">
+                <button class="genre-filter active px-4 py-2 rounded-full text-sm font-medium bg-gray-700 text-gray-300 whitespace-nowrap">All</button>
+                <button class="genre-filter px-4 py-2 rounded-full text-sm font-medium bg-gray-700 text-gray-300 whitespace-nowrap">Electronic</button>
+                <button class="genre-filter px-4 py-2 rounded-full text-sm font-medium bg-gray-700 text-gray-300 whitespace-nowrap">Indie</button>
+                <button class="genre-filter px-4 py-2 rounded-full text-sm font-medium bg-gray-700 text-gray-300 whitespace-nowrap">Rock</button>
+                <button class="genre-filter px-4 py-2 rounded-full text-sm font-medium bg-gray-700 text-gray-300 whitespace-nowrap">Hip-Hop</button>
+                <button class="genre-filter px-4 py-2 rounded-full text-sm font-medium bg-gray-700 text-gray-300 whitespace-nowrap">Jazz</button>
+                <button class="genre-filter px-4 py-2 rounded-full text-sm font-medium bg-gray-700 text-gray-300 whitespace-nowrap">Classical</button>
+            </div>
+        </div>
+
+        <!-- Active Groups -->
+        <div class="px-4 py-6">
+            <h3 class="text-lg font-semibold mb-4">Active Groups • <span class="text-violet-400">12 available</span></h3>
+            <div class="space-y-4">
+                <!-- Group Card 1 -->
+                <div class="group-card rounded-lg p-4">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-lg">Electronic Vibes</h4>
+                            <p class="text-gray-400 text-sm">Host: AlexDevilish</p>
+                            <p class="text-gray-500 text-xs mt-1">Now playing: Midnight Drive - Aurora Synthwave</p>
+                        </div>
+                        <div class="member-count px-3 py-1 rounded-full text-sm font-medium">
+                            5/8 members
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex -space-x-2">
+                            <div class="w-8 h-8 bg-gradient-to-r from-violet-500 to-amber-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">A</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">S</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">M</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">E</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">J</div>
+                        </div>
+                        <button class="btn-primary px-4 py-2 rounded-lg text-sm font-medium join-group-btn">Join Group</button>
+                    </div>
+                </div>
+
+                <!-- Group Card 2 -->
+                <div class="group-card rounded-lg p-4">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-lg">Indie Collective</h4>
+                            <p class="text-gray-400 text-sm">Host: SarahMusic</p>
+                            <p class="text-gray-500 text-xs mt-1">Now playing: Lost in the Echo - Indie Dreams</p>
+                        </div>
+                        <div class="member-count px-3 py-1 rounded-full text-sm font-medium">
+                            3/6 members
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex -space-x-2">
+                            <div class="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">S</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">L</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">T</div>
+                        </div>
+                        <button class="btn-primary px-4 py-2 rounded-lg text-sm font-medium join-group-btn">Join Group</button>
+                    </div>
+                </div>
+
+                <!-- Group Card 3 -->
+                <div class="group-card rounded-lg p-4">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-lg">Rock Legends</h4>
+                            <p class="text-gray-400 text-sm">Host: MikeRocks</p>
+                            <p class="text-gray-500 text-xs mt-1">Now playing: Thunder Strike - Classic Rock</p>
+                        </div>
+                        <div class="member-count px-3 py-1 rounded-full text-sm font-medium">
+                            7/10 members
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex -space-x-2">
+                            <div class="w-8 h-8 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">M</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">D</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">R</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">K</div>
+                            <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">+3</div>
+                        </div>
+                        <button class="btn-primary px-4 py-2 rounded-lg text-sm font-medium join-group-btn">Join Group</button>
+                    </div>
+                </div>
+
+                <!-- Group Card 4 -->
+                <div class="group-card rounded-lg p-4">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-lg">Jazz Fusion</h4>
+                            <p class="text-gray-400 text-sm">Host: JazzMaster</p>
+                            <p class="text-gray-500 text-xs mt-1">Now playing: Blue Moon - Smooth Jazz</p>
+                        </div>
+                        <div class="member-count px-3 py-1 rounded-full text-sm font-medium">
+                            4/8 members
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex -space-x-2">
+                            <div class="w-8 h-8 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">J</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">B</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-teal-500 to-green-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">N</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">C</div>
+                        </div>
+                        <button class="btn-primary px-4 py-2 rounded-lg text-sm font-medium join-group-btn">Join Group</button>
+                    </div>
+                </div>
+
+                <!-- Group Card 5 -->
+                <div class="group-card rounded-lg p-4">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-lg">Lo-Fi Study</h4>
+                            <p class="text-gray-400 text-sm">Host: StudyVibes</p>
+                            <p class="text-gray-500 text-xs mt-1">Now playing: Rainy Days - Lo-Fi Beats</p>
+                        </div>
+                        <div class="member-count px-3 py-1 rounded-full text-sm font-medium">
+                            2/5 members
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex -space-x-2">
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">S</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">A</div>
+                        </div>
+                        <button class="btn-primary px-4 py-2 rounded-lg text-sm font-medium join-group-btn">Join Group</button>
+                    </div>
+                </div>
+
+                <!-- Group Card 6 -->
+                <div class="group-card rounded-lg p-4">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-lg">Hip-Hop Central</h4>
+                            <p class="text-gray-400 text-sm">Host: BeatMaster</p>
+                            <p class="text-gray-500 text-xs mt-1">Now playing: Urban Flow - Rap Classics</p>
+                        </div>
+                        <div class="member-count px-3 py-1 rounded-full text-sm font-medium">
+                            6/8 members
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex -space-x-2">
+                            <div class="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">B</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">F</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">T</div>
+                            <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">L</div>
+                            <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-xs font-bold border-2 border-gray-800">+2</div>
+                        </div>
+                        <button class="btn-primary px-4 py-2 rounded-lg text-sm font-medium join-group-btn">Join Group</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load More Button -->
+        <div class="px-4 py-6 text-center">
+            <button class="bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-lg text-sm font-medium transition-colors">
+                Load More Groups
+            </button>
+        </div>
+
+        <!-- Credits Section -->
+        <div class="px-4 py-6 text-center">
+            <p class="text-sm text-gray-500">Made with ♡ by <span class="text-violet-400 font-medium">AlexDevilish</span></p>
+            <p class="text-xs text-gray-600 mt-1">Creating synchronized musical moments</p>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="nav-bottom fixed bottom-0 left-0 right-0 z-30 px-4 py-3">
+        <div class="flex justify-around items-center max-w-md mx-auto">
+            <a href="index.html" class="flex flex-col items-center space-y-1 text-gray-400 hover:text-white transition-colors no-underline">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <span class="text-xs">Player</span>
+            </a>
+            <a href="groups.html" class="flex flex-col items-center space-y-1 text-violet-400 no-underline">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H17c-.8 0-1.54.37-2.01.99L12 13l-2.99-4.01A2.5 2.5 0 0 0 7 8H5.46c-.8 0-1.49.59-1.42 1.37L6.5 16H9v6h2v-6h2v6h2z"/>
+                </svg>
+                <span class="text-xs font-medium">Groups</span>
+            </a>
+            <a href="host.html" class="flex flex-col items-center space-y-1 text-gray-400 hover:text-white transition-colors no-underline">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span class="text-xs">Host</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        // Initialize Typed.js for hero title
+        const typed = new Typed('#typed-title', {
+            strings: ['Discover Groups', 'Join the Music', 'Listen Together'],
+            typeSpeed: 80,
+            backSpeed: 60,
+            backDelay: 2000,
+            loop: true,
+            showCursor: false
+        });
+
+        // Genre filter functionality
+        const genreFilters = document.querySelectorAll('.genre-filter');
+        genreFilters.forEach(filter => {
+            filter.addEventListener('click', function() {
+                // Remove active class from all filters
+                genreFilters.forEach(f => f.classList.remove('active'));
+                // Add active class to clicked filter
+                this.classList.add('active');
+                
+                // Animate filter change
+                anime({
+                    targets: this,
+                    scale: [0.95, 1],
+                    duration: 200,
+                    easing: 'easeOutQuad'
+                });
+            });
+        });
+
+        // Group card animations
+        anime({
+            targets: '.group-card',
+            translateY: [50, 0],
+            opacity: [0, 1],
+            delay: anime.stagger(100),
+            duration: 600,
+            easing: 'easeOutElastic(1, .8)'
+        });
+
+        // Join group button functionality
+        document.querySelectorAll('.join-group-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // Animate button
+                anime({
+                    targets: this,
+                    scale: [1, 0.95, 1],
+                    duration: 200,
+                    easing: 'easeOutQuad'
+                });
+                
+                // Show success message
+                this.textContent = 'Joined!';
+                this.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                
+                // Show notification
+                showNotification('Successfully joined the group!', 'success');
+                
+                setTimeout(() => {
+                    this.textContent = 'Join Group';
+                    this.style.background = 'linear-gradient(135deg, #8b5cf6, #a855f7)';
+                }, 2000);
+            });
+        });
+
+        // Join group with code functionality
+        const joinCodeBtn = document.querySelector('.bg-gray-800\\/50 button');
+        const codeInput = document.querySelector('.bg-gray-800\\/50 input');
+        
+        if (joinCodeBtn && codeInput) {
+            joinCodeBtn.addEventListener('click', function() {
+                const code = codeInput.value.trim();
+                if (code) {
+                    showNotification(`Joining group with code: ${code}`, 'info');
+                    codeInput.value = '';
+                } else {
+                    showNotification('Please enter a group code', 'warning');
+                }
+            });
+        }
+
+        // Create group button
+        const createGroupBtn = document.querySelector('header .btn-primary');
+        if (createGroupBtn) {
+            createGroupBtn.addEventListener('click', function() {
+                showNotification('Create Group feature coming soon!', 'info');
+            });
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm`;
+            
+            const colors = {
+                success: 'bg-emerald-500',
+                error: 'bg-red-500',
+                warning: 'bg-amber-500',
+                info: 'bg-violet-500'
+            };
+            
+            notification.classList.add(colors[type] || colors.info);
+            notification.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <span class="text-white text-sm font-medium">${message}</span>
+                    <button class="text-white/80 hover:text-white" onclick="this.parentElement.parentElement.remove()">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            anime({
+                targets: notification,
+                translateX: [300, 0],
+                opacity: [0, 1],
+                duration: 300,
+                easing: 'easeOutQuad'
+            });
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                anime({
+                    targets: notification,
+                    translateX: [0, 300],
+                    opacity: [1, 0],
+                    duration: 300,
+                    easing: 'easeOutQuad',
+                    complete: () => notification.remove()
+                });
+            }, 3000);
+        }
+
+        // Add hover effects to group cards
+        document.querySelectorAll('.group-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                anime({
+                    targets: this,
+                    scale: 1.02,
+                    duration: 300,
+                    easing: 'easeOutQuad'
+                });
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                anime({
+                    targets: this,
+                    scale: 1,
+                    duration: 300,
+                    easing: 'easeOutQuad'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host Dashboard - SyncBeats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.12/typed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+            overflow-x: hidden;
+        }
+        
+        .aurora-bg {
+            background: linear-gradient(45deg, #8b5cf6, #f59e0b, #8b5cf6);
+            background-size: 400% 400%;
+            animation: aurora 8s ease-in-out infinite;
+            opacity: 0.1;
+        }
+        
+        @keyframes aurora {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .dashboard-card {
+            background: rgba(31, 41, 55, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .dashboard-card:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .nav-bottom {
+            backdrop-filter: blur(10px);
+            background: rgba(26, 26, 26, 0.9);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6, #a855f7);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: #374151;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #8b5cf6, #a855f7);
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-switch.active::after {
+            transform: translateX(26px);
+        }
+        
+        .member-item {
+            background: rgba(55, 65, 81, 0.5);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .member-item:hover {
+            background: rgba(75, 85, 99, 0.5);
+        }
+        
+        .floating-notes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .note {
+            position: absolute;
+            color: rgba(139, 92, 246, 0.3);
+            animation: float 6s ease-in-out infinite;
+            font-size: 20px;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+        
+        .stats-number {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #8b5cf6, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-white">
+    <!-- Aurora Background -->
+    <div class="aurora-bg fixed inset-0 z-0"></div>
+    
+    <!-- Floating Notes -->
+    <div class="floating-notes z-10">
+        <div class="note" style="left: 10%; animation-delay: 0s;">♪</div>
+        <div class="note" style="left: 30%; animation-delay: 1s;">♫</div>
+        <div class="note" style="left: 50%; animation-delay: 2s;">♪</div>
+        <div class="note" style="left: 70%; animation-delay: 3s;">♫</div>
+        <div class="note" style="left: 90%; animation-delay: 4s;">♪</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="relative z-20 min-h-screen pb-20">
+        <!-- Header -->
+        <header class="p-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-gradient-to-r from-violet-500 to-amber-500 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">♪</span>
+                </div>
+                <span class="text-xl font-bold">SyncBeats</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-sm text-gray-300">Host Mode</span>
+                <div class="toggle-switch active" id="host-mode-toggle"></div>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <div class="px-4 py-6 text-center">
+            <h1 class="text-3xl font-bold mb-2">
+                <span id="typed-title"></span>
+            </h1>
+            <p class="text-gray-400">Control your group's musical journey</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="px-4 py-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="dashboard-card rounded-lg p-4 text-center">
+                    <div class="stats-number">5</div>
+                    <p class="text-gray-400 text-sm">Active Members</p>
+                </div>
+                <div class="dashboard-card rounded-lg p-4 text-center">
+                    <div class="stats-number">2.4h</div>
+                    <p class="text-gray-400 text-sm">Session Time</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Session -->
+        <div class="px-4 py-6">
+            <div class="dashboard-card rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-4">Current Session</h3>
+                <div class="flex items-center space-x-4 mb-4">
+                    <img src="resources/album-art-1.jpg" alt="Current Track" 
+                         class="w-16 h-16 rounded-lg object-cover">
+                    <div class="flex-1">
+                        <h4 class="font-medium">Midnight Drive</h4>
+                        <p class="text-gray-400 text-sm">Aurora Synthwave</p>
+                        <p class="text-gray-500 text-xs">Neon Dreams • 2024</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-400">2:34 / 4:12</p>
+                        <div class="flex space-x-2 mt-2">
+                            <button class="p-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                                </svg>
+                            </button>
+                            <button class="p-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex space-x-3">
+                    <button class="btn-primary flex-1 py-3 rounded-lg font-medium" onclick="pauseForAll()">Pause for All</button>
+                    <button class="btn-secondary px-6 py-3 rounded-lg font-medium" onclick="nextTrack()">Next Track</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Queue Management -->
+        <div class="px-4 py-6">
+            <div class="dashboard-card rounded-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Queue Management</h3>
+                    <button class="btn-primary px-4 py-2 rounded-lg text-sm font-medium" onclick="addTrack()">Add Track</button>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-3 p-3 bg-gray-700/50 rounded-lg">
+                        <div class="w-8 h-8 bg-gradient-to-r from-rose-500 to-pink-500 rounded flex items-center justify-center text-xs font-bold">1</div>
+                        <img src="resources/album-art-2.jpg" alt="Track" class="w-10 h-10 rounded object-cover">
+                        <div class="flex-1">
+                            <p class="font-medium text-sm">Electric Dreams</p>
+                            <p class="text-gray-400 text-xs">Neon Pulse</p>
+                        </div>
+                        <div class="text-gray-400 text-sm">3:45</div>
+                        <button class="text-gray-400 hover:text-white">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="flex items-center space-x-3 p-3 bg-gray-700/50 rounded-lg">
+                        <div class="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded flex items-center justify-center text-xs font-bold">2</div>
+                        <img src="resources/concert-stage.jpg" alt="Track" class="w-10 h-10 rounded object-cover">
+                        <div class="flex-1">
+                            <p class="font-medium text-sm">Night Drive</p>
+                            <p class="text-gray-400 text-xs">Synthwave Collective</p>
+                        </div>
+                        <div class="text-gray-400 text-sm">4:12</div>
+                        <button class="text-gray-400 hover:text-white">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="flex items-center space-x-3 p-3 bg-gray-700/50 rounded-lg">
+                        <div class="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded flex items-center justify-center text-xs font-bold">3</div>
+                        <img src="resources/studio-equipment.jpg" alt="Track" class="w-10 h-10 rounded object-cover">
+                        <div class="flex-1">
+                            <p class="font-medium text-sm">Cosmic Journey</p>
+                            <p class="text-gray-400 text-xs">Space Explorer</p>
+                        </div>
+                        <div class="text-gray-400 text-sm">5:23</div>
+                        <button class="text-gray-400 hover:text-white">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Member Management -->
+        <div class="px-4 py-6">
+            <div class="dashboard-card rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-4">Member Management</h3>
+                <div class="space-y-3">
+                    <div class="member-item flex items-center justify-between p-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-r from-violet-500 to-amber-500 rounded-full flex items-center justify-center font-bold">A</div>
+                            <div>
+                                <p class="font-medium">AlexDevilish (You)</p>
+                                <p class="text-gray-400 text-sm">Host • Connected</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-emerald-400">Host</span>
+                        </div>
+                    </div>
+                    <div class="member-item flex items-center justify-between p-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center font-bold">S</div>
+                            <div>
+                                <p class="font-medium">Sarah</p>
+                                <p class="text-gray-400 text-sm">Connected</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="text-gray-400 hover:text-white p-1">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                            </button>
+                            <button class="text-gray-400 hover:text-red-400 p-1">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M7 11v2h10v-2H7zm5-9a6 6 0 0 0-6 6h2a4 4 0 0 1 8 0h2a6 6 0 0 0-6-6z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="member-item flex items-center justify-between p-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full flex items-center justify-center font-bold">M</div>
+                            <div>
+                                <p class="font-medium">Mike</p>
+                                <p class="text-gray-400 text-sm">Connected</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="text-gray-400 hover:text-white p-1">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                            </button>
+                            <button class="text-gray-400 hover:text-red-400 p-1">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M7 11v2h10v-2H7zm5-9a6 6 0 0 0-6 6h2a4 4 0 0 1 8 0h2a6 6 0 0 0-6-6z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="member-item flex items-center justify-between p-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center font-bold">E</div>
+                            <div>
+                                <p class="font-medium">Emma</p>
+                                <p class="text-gray-400 text-sm">Away</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="text-gray-400 hover:text-white p-1">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                            </button>
+                            <button class="text-gray-400 hover:text-red-400 p-1">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M7 11v2h10v-2H7zm5-9a6 6 0 0 0-6 6h2a4 4 0 0 1 8 0h2a6 6 0 0 0-6-6z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session Analytics -->
+        <div class="px-4 py-6">
+            <div class="dashboard-card rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-4">Session Analytics</h3>
+                <div id="analytics-chart" style="height: 200px;"></div>
+            </div>
+        </div>
+
+        <!-- Group Settings -->
+        <div class="px-4 py-6">
+            <div class="dashboard-card rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-4">Group Settings</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium">Allow Members to Add Tracks</p>
+                            <p class="text-gray-400 text-sm">Let members contribute to the queue</p>
+                        </div>
+                        <div class="toggle-switch active"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium">Chat Moderation</p>
+                            <p class="text-gray-400 text-sm">Review messages before they appear</p>
+                        </div>
+                        <div class="toggle-switch"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium">Private Session</p>
+                            <p class="text-gray-400 text-sm">Hide from public group listings</p>
+                        </div>
+                        <div class="toggle-switch active"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Credits Section -->
+        <div class="px-4 py-6 text-center">
+            <p class="text-sm text-gray-500">Made with ♡ by <span class="text-violet-400 font-medium">AlexDevilish</span></p>
+            <p class="text-xs text-gray-600 mt-1">Creating synchronized musical moments</p>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="nav-bottom fixed bottom-0 left-0 right-0 z-30 px-4 py-3">
+        <div class="flex justify-around items-center max-w-md mx-auto">
+            <a href="index.html" class="flex flex-col items-center space-y-1 text-gray-400 hover:text-white transition-colors no-underline">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <span class="text-xs">Player</span>
+            </a>
+            <a href="groups.html" class="flex flex-col items-center space-y-1 text-gray-400 hover:text-white transition-colors no-underline">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H17c-.8 0-1.54.37-2.01.99L12 13l-2.99-4.01A2.5 2.5 0 0 0 7 8H5.46c-.8 0-1.49.59-1.42 1.37L6.5 16H9v6h2v-6h2v6h2z"/>
+                </svg>
+                <span class="text-xs">Groups</span>
+            </a>
+            <a href="host.html" class="flex flex-col items-center space-y-1 text-violet-400 no-underline">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span class="text-xs font-medium">Host</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        // Initialize Typed.js for hero title
+        const typed = new Typed('#typed-title', {
+            strings: ['Host Dashboard', 'Control Center', 'Session Manager'],
+            typeSpeed: 80,
+            backSpeed: 60,
+            backDelay: 2000,
+            loop: true,
+            showCursor: false
+        });
+
+        // Initialize ECharts for analytics
+        const chartDom = document.getElementById('analytics-chart');
+        const myChart = echarts.init(chartDom);
+        
+        const option = {
+            backgroundColor: 'transparent',
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: ['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00'],
+                axisLine: {
+                    lineStyle: {
+                        color: '#374151'
+                    }
+                },
+                axisLabel: {
+                    color: '#9CA3AF'
+                }
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: {
+                    lineStyle: {
+                        color: '#374151'
+                    }
+                },
+                axisLabel: {
+                    color: '#9CA3AF'
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#374151'
+                    }
+                }
+            },
+            series: [{
+                data: [3, 4, 5, 5, 4, 5, 5],
+                type: 'line',
+                smooth: true,
+                lineStyle: {
+                    color: '#8b5cf6',
+                    width: 3
+                },
+                itemStyle: {
+                    color: '#8b5cf6'
+                },
+                areaStyle: {
+                    color: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [{
+                            offset: 0, color: 'rgba(139, 92, 246, 0.3)'
+                        }, {
+                            offset: 1, color: 'rgba(139, 92, 246, 0.05)'
+                        }]
+                    }
+                }
+            }]
+        };
+        
+        myChart.setOption(option);
+
+        // Host control functions
+        function pauseForAll() {
+            showNotification('Paused playback for all members', 'info');
+            
+            // Animate button
+            const btn = event.target;
+            anime({
+                targets: btn,
+                scale: [1, 0.95, 1],
+                duration: 200,
+                easing: 'easeOutQuad'
+            });
+        }
+
+        function nextTrack() {
+            showNotification('Skipped to next track', 'info');
+            
+            // Animate button
+            const btn = event.target;
+            anime({
+                targets: btn,
+                scale: [1, 0.95, 1],
+                duration: 200,
+                easing: 'easeOutQuad'
+            });
+        }
+
+        function addTrack() {
+            showNotification('Add Track feature coming soon!', 'info');
+            
+            // Animate button
+            const btn = event.target;
+            anime({
+                targets: btn,
+                scale: [1, 0.95, 1],
+                duration: 200,
+                easing: 'easeOutQuad'
+            });
+        }
+
+        // Toggle switch functionality
+        document.querySelectorAll('.toggle-switch').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                this.classList.toggle('active');
+                
+                // Animate toggle
+                anime({
+                    targets: this,
+                    scale: [0.95, 1],
+                    duration: 200,
+                    easing: 'easeOutQuad'
+                });
+                
+                // Show notification based on toggle state
+                const isActive = this.classList.contains('active');
+                const settingName = this.parentElement.querySelector('p').textContent;
+                showNotification(`${settingName} ${isActive ? 'enabled' : 'disabled'}`, 'info');
+            });
+        });
+
+        // Member management buttons
+        document.querySelectorAll('.member-item button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const memberName = this.closest('.member-item').querySelector('.font-medium').textContent;
+                const action = this.querySelector('svg').getAttribute('viewBox') ? 'promoted' : 'removed';
+                
+                showNotification(`${memberName} ${action}`, 'warning');
+                
+                anime({
+                    targets: this,
+                    scale: [1, 0.8, 1],
+                    duration: 200,
+                    easing: 'easeOutQuad'
+                });
+            });
+        });
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm`;
+            
+            const colors = {
+                success: 'bg-emerald-500',
+                error: 'bg-red-500',
+                warning: 'bg-amber-500',
+                info: 'bg-violet-500'
+            };
+            
+            notification.classList.add(colors[type] || colors.info);
+            notification.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <span class="text-white text-sm font-medium">${message}</span>
+                    <button class="text-white/80 hover:text-white" onclick="this.parentElement.parentElement.remove()">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            anime({
+                targets: notification,
+                translateX: [300, 0],
+                opacity: [0, 1],
+                duration: 300,
+                easing: 'easeOutQuad'
+            });
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                anime({
+                    targets: notification,
+                    translateX: [0, 300],
+                    opacity: [1, 0],
+                    duration: 300,
+                    easing: 'easeOutQuad',
+                    complete: () => notification.remove()
+                });
+            }, 3000);
+        }
+
+        // Animate dashboard cards on load
+        anime({
+            targets: '.dashboard-card',
+            translateY: [50, 0],
+            opacity: [0, 1],
+            delay: anime.stagger(100),
+            duration: 600,
+            easing: 'easeOutElastic(1, .8)'
+        });
+
+        // Button click animations
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function() {
+                anime({
+                    targets: this,
+                    scale: [1, 0.95, 1],
+                    duration: 200,
+                    easing: 'easeOutQuad'
+                });
+            });
+        });
+
+        // Member item hover effects
+        document.querySelectorAll('.member-item').forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                anime({
+                    targets: this,
+                    scale: 1.02,
+                    duration: 300,
+                    easing: 'easeOutQuad'
+                });
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                anime({
+                    targets: this,
+                    scale: 1,
+                    duration: 300,
+                    easing: 'easeOutQuad'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
