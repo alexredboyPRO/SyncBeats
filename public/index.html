@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SyncBeats – listen together</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    body { background: #111; color: #fff; font-family: system-ui, sans-serif; }
+    .progress-bar { background: linear-gradient(90deg, #8b5cf6, #f59e0b); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center space-y-6 p-6">
+
+  <h1 class="text-2xl font-bold">SyncBeats</h1>
+
+  <!-- album -->
+  <img id="art" src="https://picsum.photos/300/300?random=1" class="w-64 h-64 rounded-2xl shadow-2xl">
+
+  <!-- info -->
+  <div class="text-center">
+    <div id="title" class="text-xl font-semibold">Midnight Drive</div>
+    <div id="artist" class="text-gray-400">Aurora Synthwave</div>
+  </div>
+
+  <!-- progress -->
+  <div class="w-full max-w-md space-y-1">
+    <div class="flex justify-between text-xs text-gray-400">
+      <span id="cur">0:00</span><span id="dur">0:00</span>
+    </div>
+    <div class="w-full bg-gray-700 rounded-full h-2 relative">
+      <div id="prog" class="progress-bar h-2 rounded-full" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- controls -->
+  <div class="flex items-center space-x-4">
+    <button id="prev" class="p-2 text-gray-400 hover:text-white">⏮</button>
+    <button id="pp" class="bg-violet-600 text-white px-6 py-3 rounded-full">▶</button>
+    <button id="next" class="p-2 text-gray-400 hover:text-white">⏭</button>
+  </div>
+
+  <!-- volume -->
+  <div class="flex items-center space-x-3 w-full max-w-md">
+    <span class="text-sm">🔊</span>
+    <input id="vol" type="range" min="0" max="100" value="70" class="flex-1">
+    <span id="volLbl" class="text-xs w-10 text-right">70%</span>
+  </div>
+
+  <!-- chat -->
+  <div class="w-full max-w-md">
+    <div id="chat" class="bg-gray-800/50 rounded-lg h-32 p-3 overflow-y-auto text-sm space-y-2"></div>
+    <div class="flex mt-2">
+      <input id="msg" placeholder="Type message…" class="flex-1 bg-gray-700 rounded-l px-3 py-2 text-sm focus:outline-none">
+      <button id="send" class="bg-violet-600 px-4 rounded-r text-sm">Send</button>
+    </div>
+  </div>
+
+  <!-- room link -->
+  <div class="text-xs text-gray-400">Room: <span id="room" class="text-violet-400"></span></div>
+
+  <script src="main.js"></script>
+</body>
+</html>
