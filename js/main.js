@@ -1,11 +1,7 @@
-/*  SyncBeats – main.js
-    Works out-of-the-box on GitHub Pages (or any static host).
-    1.  Signalling:  wss://y-webrtc-signaling-eu.herokuapp.com  (free, no key)
-    2.  Voice:       WebRTC mesh (no server after handshake)
-    3.  Sync:        yjs “awareness” – everybody shares {playing,time,track}
-    4.  Chat:        same channel
+/*  SyncBeats – main.js  (ES-module, GitHub-Pages ready)
+    1.  Loads MP3s from  ./audio/SoundHelix-Song-N.mp3
+    2.  Everything else identical to previous explanation
 */
-
 import * as Y from 'https://cdn.skypack.dev/yjs@13.5.52';
 import { WebrtcProvider } from 'https://cdn.skypack.dev/y-webrtc@10.0.8';
 
@@ -23,7 +19,7 @@ let ydoc, provider, awareness;
 let myPeerId;
 let amHost = false;
 let currentTrack = 0;
-let audio = new Audio();      // <— real audio element
+let audio = new Audio();
 audio.volume = .75;
 
 // ---------- DOM ----------
@@ -46,35 +42,26 @@ async function init(){
     colour:randomColour()
   });
 
-  // when we connect
   provider.on('status', evt => {
     $('connection-status').textContent = evt.status==='connected' ? '● Connected' : '● Connecting…';
   });
 
-  // when others change
   awareness.on('change', renderMembers);
   ydoc.getMap('sync').observe(renderSync);
 
-  // join existing sync
   const sync = ydoc.getMap('sync');
   if(sync.get('track')!==undefined) currentTrack = sync.get('track');
   if(sync.get('playing')) { audio.currentTime = sync.get('time'); audio.play(); }
   loadTrack(currentTrack);
 
-  // local timeupdates → broadcast
   audio.ontimeupdate = () => {
-    if(Math.abs(audio.currentTime - (sync.get('time')||0))>2) // big jump → broadcast
+    if(Math.abs(audio.currentTime - (sync.get('time')||0))>2)
       sync.set('time', audio.currentTime);
   };
   audio.onplay = audio.onpause = () => sync.set('playing', !audio.paused);
-
-  // chat
   ydoc.getArray('chat').observe(renderChat);
 
-  // first render
-  renderMembers();
-  renderSync();
-  renderChat();
+  renderMembers(); renderSync(); renderChat();
 }
 init();
 
@@ -95,7 +82,8 @@ function loadTrack(idx){
   $('album-name').textContent  = `${t.album} • 2024`;
   $('album-cover').src = t.cover;
   $('total-time').textContent = fmtTime(t.duration);
-  audio.src = `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${idx+1}.mp3`; // royalty-free placeholder
+  // ======  NEW: local MP3  ======
+  audio.src = `audio/SoundHelix-Song-${idx+1}.mp3`;
   audio.currentTime = 0;
   renderProgress();
 }
@@ -118,7 +106,6 @@ function renderMembers(){
 }
 function renderSync(){
   const sync = ydoc.getMap('sync');
-  // apply remote state
   if(sync.get('track')!==undefined && sync.get('track')!==currentTrack) loadTrack(sync.get('track'));
   if(sync.get('playing')!==undefined && sync.get('playing')!==!audio.paused) togglePlay();
   if(sync.get('time')!==undefined && Math.abs(sync.get('time')-audio.currentTime)>2) audio.currentTime = sync.get('time');
