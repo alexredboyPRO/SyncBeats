@@ -1,21 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SyncBeats – listen together</title>
-
-  <!-- external libs -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.12/typed.min.js"></script>
-
-  <!-- our files -->
   <link rel="stylesheet" href="css/styles.css"/>
 </head>
-
 <body class="text-white min-h-screen flex flex-col">
-  <!-- animated background -->
   <div class="aurora-bg"></div>
   <div class="floating-notes" aria-hidden="true">
     <div class="note" style="left:10%;animation-delay:0s">♪</div>
@@ -25,34 +19,28 @@
     <div class="note" style="left:50%;animation-delay:4s">♪</div>
   </div>
 
-  <!-- header -->
   <header class="p-4 flex justify-between items-center z-20">
     <div class="flex items-center gap-2">
       <div class="w-8 h-8 rounded-lg bg-gradient-to-r from-violet-500 to-amber-500 flex items-center justify-center font-bold text-sm">♪</div>
       <span class="text-xl font-bold">SyncBeats</span>
     </div>
-    <div id="connection-status" class="text-sm text-emerald-400">● Connected</div>
+    <div id="connection-status" class="text-sm text-emerald-400">● Connecting…</div>
   </header>
 
-  <!-- main card -->
   <main class="flex-1 px-4 pb-24 z-20">
-    <!-- now-playing -->
     <section class="text-center mb-6">
       <h1 class="text-2xl font-bold mb-1"><span id="typed-title"></span></h1>
       <p id="artist-name" class="text-gray-300">–</p>
       <p id="album-name"  class="text-gray-400 text-sm">–</p>
     </section>
 
-    <!-- album art -->
     <section class="flex justify-center mb-6">
       <div class="album-art">
         <img id="album-cover" src="https://source.unsplash.com/random/400x400?synthwave" alt="album" class="w-64 h-64 rounded-2xl object-cover shadow-2xl glow-violet">
       </div>
     </section>
 
-    <!-- player -->
     <section class="max-w-md mx-auto space-y-4">
-      <!-- progress -->
       <div>
         <div class="flex justify-between text-xs text-gray-400">
           <span id="current-time">0:00</span>
@@ -64,17 +52,14 @@
         </div>
       </div>
 
-      <!-- waveform -->
       <div id="waveform" class="waveform"></div>
 
-      <!-- controls -->
       <div class="flex items-center justify-center gap-6">
-        <button id="prev-btn" class="p-2 text-gray-400 hover:text-white">⏮</button>
+        <button id="prev-btn" class="p-2 text-gray-400 hover:text-white text-2xl">⏮</button>
         <button id="play-pause-btn" class="btn-primary p-3 rounded-full text-white text-2xl">▶</button>
-        <button id="next-btn" class="p-2 text-gray-400 hover:text-white">⏭</button>
+        <button id="next-btn" class="p-2 text-gray-400 hover:text-white text-2xl">⏭</button>
       </div>
 
-      <!-- volume -->
       <div class="flex items-center gap-3">
         <span class="text-gray-400 text-sm">🔊</span>
         <input id="volume-slider" type="range" min="0" max="100" value="75" class="flex-1">
@@ -82,13 +67,11 @@
       </div>
     </section>
 
-    <!-- members -->
     <section class="px-2 mt-8">
       <h3 class="text-lg font-semibold mb-3">Listening together • <span id="member-count" class="text-violet-400">1</span></h3>
       <div id="members-list" class="flex gap-4 overflow-x-auto pb-2"></div>
     </section>
 
-    <!-- chat -->
     <section class="px-2 mt-6">
       <h3 class="text-lg font-semibold mb-3">Group chat</h3>
       <div id="chat-box" class="bg-gray-800/60 rounded-lg p-3 h-40 overflow-y-auto text-sm space-y-2"></div>
@@ -99,7 +82,6 @@
     </section>
   </main>
 
-  <!-- bottom nav -->
   <nav class="nav-bottom fixed bottom-0 left-0 right-0 z-30 px-4 py-3">
     <div class="flex justify-around max-w-md mx-auto">
       <a href="index.html" class="nav-link active">▶ Player</a>
@@ -108,7 +90,6 @@
     </div>
   </nav>
 
-  <!-- modules -->
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
