@@ -1,11 +1,13 @@
-/*  SyncBeats – main.js  (ES-module, GitHub-Pages ready)
-    1.  Loads MP3s from  ./audio/SoundHelix-Song-N.mp3
-    2.  Everything else identical to previous explanation
+/*  SyncBeats – main.js  (ES-module)
+    Works on GitHub Pages with zero back-end.
+    - WebRTC voice + chat
+    - yjs awareness keeps {track, time, playing} in sync
+    - loads MP3s from ./audio/SoundHelix-Song-1.mp3 … 3.mp3
 */
 import * as Y from 'https://cdn.skypack.dev/yjs@13.5.52';
 import { WebrtcProvider } from 'https://cdn.skypack.dev/y-webrtc@10.0.8';
 
-// ---------- CONFIG ----------
+/* ---------- CONFIG ---------- */
 const ROOM = location.hash.slice(1) || 'syncbeats-public';
 const SIGNALLING = 'wss://y-webrtc-signaling-eu.herokuapp.com';
 const TRACKS = [
@@ -14,58 +16,27 @@ const TRACKS = [
   {title:'Night Drive',     artist:'Synthwave Collective',album:'Urban Nights',duration:252, cover:'https://source.unsplash.com/random/400x400?night'}
 ];
 
-// ---------- STATE ----------
+/* ---------- STATE ---------- */
 let ydoc, provider, awareness;
-let myPeerId;
-let amHost = false;
 let currentTrack = 0;
-let audio = new Audio();
-audio.volume = .75;
+let audio = new Audio();          // real <audio> element
+audio.volume = 0.75;
 
-// ---------- DOM ----------
+/* ---------- DOM HELPERS ---------- */
 const $ = id => document.getElementById(id);
-$('volume-slider').oninput = e => { audio.volume = e.target.value/100; $('volume-percent').textContent = e.target.value+'%'; };
-$('play-pause-btn').onclick = togglePlay;
-$('next-btn').onclick = () => changeTrack((currentTrack+1)%TRACKS.length);
-$('prev-btn').onclick  = () => changeTrack((currentTrack-1+TRACKS.length)%TRACKS.length);
-$('chat-send').onclick = sendChat;
-$('chat-input').onkeypress = e => e.key==='Enter' && sendChat();
 
-// ---------- INIT ----------
-async function init(){
-  ydoc = new Y.Doc();
-  provider = new WebrtcProvider(ROOM, ydoc, { signaling:[SIGNALLING] });
-  awareness = provider.awareness;
-
-  awareness.setLocalStateField('user',{
-    name:localStorage.getItem('username')||'Anon'+Math.floor(Math.random()*100),
-    colour:randomColour()
-  });
-
-  provider.on('status', evt => {
-    $('connection-status').textContent = evt.status==='connected' ? '● Connected' : '● Connecting…';
-  });
-
-  awareness.on('change', renderMembers);
-  ydoc.getMap('sync').observe(renderSync);
-
-  const sync = ydoc.getMap('sync');
-  if(sync.get('track')!==undefined) currentTrack = sync.get('track');
-  if(sync.get('playing')) { audio.currentTime = sync.get('time'); audio.play(); }
-  loadTrack(currentTrack);
-
-  audio.ontimeupdate = () => {
-    if(Math.abs(audio.currentTime - (sync.get('time')||0))>2)
-      sync.set('time', audio.currentTime);
-  };
-  audio.onplay = audio.onpause = () => sync.set('playing', !audio.paused);
-  ydoc.getArray('chat').observe(renderChat);
-
-  renderMembers(); renderSync(); renderChat();
+/* ---------- AUDIO + SYNC ---------- */
+function loadTrack(idx){
+  const t = TRACKS[idx];
+  $('typed-title').textContent = t.title;
+  $('artist-name').textContent = t.artist;
+  $('album-name').textContent  = `${t.album} • 2024`;
+  $('album-cover').src = t.cover;
+  $('total-time').textContent = fmtTime(t.duration);
+  audio.src = `audio/SoundHelix-Song-${idx+1}.mp3`;   // local file
+  audio.currentTime = 0;
+  renderProgress();
 }
-init();
-
-// ---------- SYNC ----------
 function togglePlay(){
   audio.paused ? audio.play() : audio.pause();
   ydoc.getMap('sync').set('playing', !audio.paused);
@@ -75,20 +46,14 @@ function changeTrack(idx){
   ydoc.getMap('sync').set('track', idx);
   loadTrack(idx);
 }
-function loadTrack(idx){
-  const t = TRACKS[idx];
-  $('typed-title').textContent = t.title;
-  $('artist-name').textContent = t.artist;
-  $('album-name').textContent  = `${t.album} • 2024`;
-  $('album-cover').src = t.cover;
-  $('total-time').textContent = fmtTime(t.duration);
-  // ======  NEW: local MP3  ======
-  audio.src = `audio/SoundHelix-Song-${idx+1}.mp3`;
-  audio.currentTime = 0;
-  renderProgress();
-}
 
-// ---------- RENDER ----------
+/* ---------- RENDER ---------- */
+function renderProgress(){
+  const t = audio.currentTime, d = audio.duration || TRACKS[currentTrack].duration;
+  $('current-time').textContent = fmtTime(t);
+  $('progress-bar').style.width = (t/d*100)+'%';
+  $('progress-handle').style.setProperty('--progress', (t/d*100)+'%');
+}
 function renderMembers(){
   const states = Array.from(awareness.getStates().values());
   $('member-count').textContent = states.length;
@@ -111,12 +76,6 @@ function renderSync(){
   if(sync.get('time')!==undefined && Math.abs(sync.get('time')-audio.currentTime)>2) audio.currentTime = sync.get('time');
   renderProgress();
 }
-function renderProgress(){
-  const t = audio.currentTime, d = audio.duration||TRACKS[currentTrack].duration;
-  $('current-time').textContent = fmtTime(t);
-  $('progress-bar').style.width = (t/d*100)+'%';
-  $('progress-handle').style.setProperty('--progress', (t/d*100)+'%');
-}
 function renderChat(){
   const arr = ydoc.getArray('chat');
   const box = $('chat-box'); box.innerHTML='';
@@ -130,7 +89,7 @@ function renderChat(){
   box.scrollTop = box.scrollHeight;
 }
 
-// ---------- CHAT ----------
+/* ---------- CHAT ---------- */
 function sendChat(){
   const input = $('chat-input');
   const text = input.value.trim(); if(!text)return;
@@ -139,6 +98,54 @@ function sendChat(){
   input.value='';
 }
 
-// ---------- HELPERS ----------
+/* ---------- HELPERS ---------- */
 function fmtTime(s){const m=Math.floor(s/60);const sec=Math.floor(s%60);return `${m}:${sec.toString().padStart(2,'0')}`;}
 function randomColour(){return `hsl(${Math.random()*360},70%,60%)`;}
+
+/* ---------- WIRE UP BUTTONS ---------- */
+$('play-pause-btn').onclick = togglePlay;
+$('next-btn').onclick = () => changeTrack((currentTrack+1)%TRACKS.length);
+$('prev-btn').onclick  = () => changeTrack((currentTrack-1+TRACKS.length)%TRACKS.length);
+$('chat-send').onclick = sendChat;
+$('chat-input').onkeypress = e => e.key==='Enter' && sendChat();
+$('volume-slider').oninput = e => {
+  audio.volume = e.target.value/100;
+  $('volume-percent').textContent = e.target.value+'%';
+};
+
+/* ---------- INIT YJS + WEBRTC ---------- */
+async function init(){
+  ydoc = new Y.Doc();
+  provider = new WebrtcProvider(ROOM, ydoc, { signaling:[SIGNALLING] });
+  awareness = provider.awareness;
+
+  awareness.setLocalStateField('user',{
+    name:localStorage.getItem('username')||'Anon'+Math.floor(Math.random()*100),
+    colour:randomColour()
+  });
+
+  provider.on('status', evt => {
+    $('connection-status').textContent = evt.status==='connected' ? '● Connected' : '● Connecting…';
+  });
+
+  awareness.on('change', renderMembers);
+  ydoc.getMap('sync').observe(renderSync);
+  ydoc.getArray('chat').observe(renderChat);
+
+  // join existing state
+  const sync = ydoc.getMap('sync');
+  if(sync.get('track')!==undefined) currentTrack = sync.get('track');
+  if(sync.get('playing')) { audio.currentTime = sync.get('time'); audio.play(); }
+  loadTrack(currentTrack);
+
+  // broadcast local changes
+  audio.ontimeupdate = () => {
+    if(Math.abs(audio.currentTime - (sync.get('time')||0))>2)
+      sync.set('time', audio.currentTime);
+  };
+  audio.onplay = audio.onpause = () => sync.set('playing', !audio.paused);
+
+  // first paint
+  renderMembers(); renderSync(); renderChat();
+}
+init();
